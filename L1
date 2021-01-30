@@ -6,8 +6,8 @@ print(sum(x))
 import pandas as pd
 data={'name': ['zhangfei', 'guanyu','liubei','dianwei','xuchu'], 'Chinese':[68,95,98,90,80], 'Maths': [65,76,86,88,90],'English': [30,98,88,77,90]}
 df=pd.DataFrame(data)
-temp=df[['Chinese','Maths','English']]
-df['Total']=temp.sum(axis=1)
+result=df[['Chinese','Maths','English']]
+df['Total']=result.sum(axis=1)
 Mean=df[['Chinese','Maths','English']].mean()
 Max=df[['Chinese','Maths','English']].max()
 Min=df[['Chinese','Maths','English']].min()
