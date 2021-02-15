@@ -1,0 +1,71 @@
+###目标：爬取车质网投诉数据，最终生成上汽大众车型因异味而投诉的汇总表
+
+# -*- coding: utf-8 -*-
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+import time
+
+def get_page(url):
+    headers={'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36'}
+    html=requests.get(url,headers=headers,timeout=10)
+    content = html.text
+    soup = BeautifulSoup(content, 'html.parser')
+    return soup
+
+def analysis(soup):
+    #创建df
+    df = pd.DataFrame(columns=['id', 'brand', 'model', 'type', 'description', 'problem', 'time', 'status'])
+    #找出所需数据框
+    temp = soup.find('div', class_='tslb_b')
+    #找出所有行
+    tr_list = temp.find_all('tr')
+    #每一行的tr对应所属元素td
+    for tr in tr_list:
+        td_list = tr.find_all('td')
+        #定义行的投诉编号	投诉品牌	投诉车系	投诉车型	问题简述	典型问题	投诉时间	投诉状态
+        if len(td_list)>0:
+            id, brand, model, type, description, problem, time, status = \
+                td_list[0].text, td_list[1].text, td_list[2].text, td_list[3].text, \
+                td_list[4].text, td_list[5].text, td_list[6].text, td_list[7].text
+            #print (id, brand, model, type, description, problem, time, status)
+            temp = {}
+            temp['id'] = id
+            temp['brand'] = brand
+            temp['model'] = model
+            temp['type'] = type
+            temp['description']=description
+            temp['problem'] = problem
+            temp['time'] = time
+            temp['status'] = status
+            #添加进最初建立的df中
+            df = df.append(temp, ignore_index=True)
+    return df
+#网址选择筛选大众后的网页
+result = pd.DataFrame(columns=['id', 'brand', 'model', 'type', 'description', 'problem', 'time', 'status'])
+base_url = 'http://www.12365auto.com/zlts/19-0-0-0-0-0_0-0-0-0-0-0-0-'
+page_num = 20
+for i in range(page_num):
+    url = base_url + str(i+1)+'.shtml'
+    soup = get_page(url)
+    df= analysis(soup)
+    result = result.append(df)
+    time.sleep(1)
+
+print(df)
+result.to_excel('VW complain.xlsx', index=False)
+
+### 筛选出上汽大众的气味投诉，生成xlsx
+import pandas as pd
+
+df = pd.read_excel('./VW complain.xlsx')
+#创建最终输出表
+odor_complain = pd.DataFrame(columns=df.columns)
+#将包含上汽大众和气味投诉H185的数据添加进最终表
+for i in range(0, len(df)):
+     if df.iloc[i]['brand']=='上汽大众' and 'H185' in df.iloc[i]['problem']:
+        odor_complain = odor_complain.append(df.iloc[i])
+
+print(odor_complain[odor_complain.columns[:7]])
+odor_complain[odor_complain.columns[:7]].to_excel('odor complain.xlsx', index = False)
+
