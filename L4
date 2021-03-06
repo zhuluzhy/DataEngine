@@ -1,0 +1,19 @@
+购物篮分析
+import pandas as pd
+from efficient_apriori import apriori
+
+df = pd.read_csv('./Market_Basket_Optimisation.csv', header = None) 
+print(df.shape)
+
+transactions = []
+for i in range(0, df.shape[0]):
+    temp = []
+    for j in range(0, 20):
+        if str(df.values[i, j]) != 'nan':
+           temp.append(str(df.values[i, j]))
+    transactions.append(temp)
+#print(transactions)
+
+itemsets, rules = apriori(transactions, min_support=0.02,  min_confidence=0.4)
+print("频繁项集：", itemsets)
+print("关联规则：", rules)
