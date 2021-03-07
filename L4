@@ -1,5 +1,7 @@
-购物篮分析
+#购物篮分析
 import pandas as pd
+
+#使用efficient_apriori工具包
 from efficient_apriori import apriori
 
 df = pd.read_csv('./Market_Basket_Optimisation.csv', header = None) 
@@ -17,3 +19,19 @@ for i in range(0, df.shape[0]):
 itemsets, rules = apriori(transactions, min_support=0.02,  min_confidence=0.4)
 print("频繁项集：", itemsets)
 print("关联规则：", rules)
+
+#使用mlxtend.frequent_patterns工具包
+one_hot = []
+#把所有列的信息合并成1列
+for i in transactions:
+    one_hot.append(','.join(i))
+df=pd.DataFrame(one_hot,index=None,columns=['transaction'])
+#one-hot编码，并删除原列
+df = df.drop('transaction', 1).join(df.transaction.str.get_dummies(','))
+
+from mlxtend.frequent_patterns import apriori
+from mlxtend.frequent_patterns import association_rules
+frequent_itemsets = apriori(df, min_support=0.02, use_colnames=True)
+rules = association_rules(frequent_itemsets, metric="lift", min_threshold=0.4)
+print("频繁项集：", frequent_itemsets)
+print("关联规则：", rules[ (rules['lift'] >= 1) & (rules['confidence'] >= 0.4) ])
