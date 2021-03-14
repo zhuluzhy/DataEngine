@@ -1,0 +1,36 @@
+from wordcloud import WordCloud
+import matplotlib.pyplot as plt
+import pandas as pd
+
+#读取csv
+text = open('Market_Basket_Optimisation.csv').read()
+#设定词云大小
+wc = WordCloud(
+		max_words=100,
+		width=2000,
+		height=1200,
+    )
+wc = wc.generate(text=text)
+
+plt.imshow(wc, interpolation='bilinear')
+plt.axis('off')
+plt.show()
+
+wc.to_file('wordcloud.png')
+
+#pandas读取csv
+file = pd.read_csv('Market_Basket_Optimisation.csv',header=None)
+#统计每个元素的次数
+transactions = {}
+for i in range(0, file.shape[0]):
+    temp = []
+    for j in range(0, 20):
+        if str(file.values[i, j]) != 'nan':
+           if str(file.values[i, j]) not in transactions:
+               transactions[str(file.values[i, j])] = 1
+           else:
+               transactions[str(file.values[i, j])] += 1
+
+
+#输出排序，取前10个元素
+print((sorted(transactions.items(), key=lambda x: x[1],reverse=True))[:10])
